@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash  
 from app.models import UserProfile
 from app.forms import LoginForm, UploadForm 
+from flask import send_from_directory
+
 
 ###
 # Routing for your application.
@@ -31,7 +33,7 @@ def upload():
 
     # Validate file upload on submit
     if form.validate_on_submit():
-        photo = form.photo.data  #Assuming your UploadForm has a photo field
+        photo = form.photo.data
 
         # Secure the filename and save the file
         filename = secure_filename(photo.filename)
@@ -43,7 +45,7 @@ def upload():
         flash('File Saved Successfully!', 'success')
 
         # Redirect the user to a route that displays all uploaded image files
-        return redirect(url_for('home'))  # Change this later to a gallery or images page
+        return redirect(url_for('home'))  # You can change this to 'files' later
 
     return render_template('upload.html', form=form)
 
@@ -94,7 +96,7 @@ def load_user(user_id):
 
 
 ###
-# The functions below should be applicable to all Flask apps.
+# Helper functions
 ###
 
 # Flash errors from the form if validation fails
@@ -106,6 +108,45 @@ def flash_errors(form):
                 getattr(form, field).label.text,
                 error
             ), 'danger')
+
+
+def get_uploaded_images():
+    """Helper function to retrieve list of uploaded image filenames."""
+    
+    # Ensure UPLOAD_FOLDER is configured in your app config:
+    # app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
+    upload_folder = app.config['UPLOAD_FOLDER']
+
+    uploaded_files = []
+
+    # Walk through the uploads directory and collect file names
+    for subdir, dirs, files in os.walk(upload_folder):
+        for file in files:
+            uploaded_files.append(file)
+
+    return uploaded_files
+
+@app.route('/uploads/<filename>')
+@login_required
+def get_image(filename):
+    """Route to retrieve and return an uploaded image file."""
+    
+    # Define the absolute path to your uploads directory
+    upload_folder = app.config['UPLOAD_FOLDER']
+    
+    # Return the file from the uploads directory
+    return send_from_directory(upload_folder, filename)
+
+@app.route('/files')
+@login_required
+def files():
+    """Route to display all uploaded images."""
+    
+    # Get the list of uploaded image filenames
+    uploaded_images = get_uploaded_images()
+
+    # Render the files.html template, passing the list of images
+    return render_template('files.html', images=uploaded_images)
 
 
 @app.route('/<file_name>.txt')
