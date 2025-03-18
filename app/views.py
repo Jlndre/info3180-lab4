@@ -31,14 +31,14 @@ def upload():
 
     # Validate file upload on submit
     if form.validate_on_submit():
-        #photo = form.photo.data  #Assuming your UploadForm has a photo field
+        photo = form.photo.data  #Assuming your UploadForm has a photo field
 
         # Secure the filename and save the file
         filename = secure_filename(photo.filename)
 
         # Define the upload path (you should have app.config['UPLOAD_FOLDER'] defined)
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        #photo.save(upload_path)
+        photo.save(upload_path)
 
         flash('File Saved Successfully!', 'success')
 
